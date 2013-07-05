@@ -68,7 +68,9 @@ if($options['tool'] == 'diffpack')
 		$outname = basename($argv[1]) . "_" . basename($argv[2]) . ".diff.csv";
 		$out = fopen($outname, 'w');
 
-		Common\fputcsv($out, array('Key', 'Same', 'From ('.basename($argv[1]).')', 'To ('.basename($argv[2]).')'));
+		Common\fputcsv($out, array('Key', 'Same', "# words added", 'From ('.basename($argv[1]).')', 'To ('.basename($argv[2]).')'));
+
+		$tot  = 0;	
 
 		$keys = array_unique(array_merge(array_keys($from['strings']), array_keys($to['strings'])));
 		foreach($keys as $key)
@@ -76,10 +78,19 @@ if($options['tool'] == 'diffpack')
 			$f = isset($from['strings'][$key]) ? $from['strings'][$key]['translation'] : null;
 			$t = isset($to['strings'][$key])   ? $to['strings'][$key]['translation']   : null;
 			$same = ($f == $t) ? 'YES' : 'NO';
-			Common\fputcsv($out, array($key, $same, $f, $t));
+			
+			$t_arr = array_map('strtolower', preg_split('/\s+/', $t ? $t : ''));
+			$f_arr = array_map('strtolower', preg_split('/\s+/', $f ? $f : ''));
+
+			$n = count(array_diff($t_arr, $f_arr));
+			$tot += $n;
+
+			Common\fputcsv($out, array($key, $same, $n, $f, $t));
 		}
 
 		fclose($out);
+
+		echo "Words added: $tot\n";
 	}
 
 	
